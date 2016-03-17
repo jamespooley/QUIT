@@ -259,14 +259,13 @@ public:
             // This gets scaled back up at the end.
             const auto data = indata / indata.abs().maxCoeff();
             
-            cppoptlib::Options opts;
+            cppoptlib::LbfgsbSolver<double>::Info opts;
             opts.rate = 1.e-5;
-            opts.maxIter = 50;
-            opts.gradTol = 1.e-3;
+            opts.iterations = 50;
+            opts.gradNorm = 1.e-3;
             opts.m = 5;
             
-            cppoptlib::LbfgsbSolver<double> solver;
-            solver.settings_ = opts;
+            cppoptlib::LbfgsbSolver<double> solver(opts);
             FMCostFunction cost;
             cost.m_B1 = B1;
             cost.m_data = data;
@@ -300,7 +299,7 @@ public:
                     best = r;
                     bestP = p;
                 }
-                its += solver.iterations();
+                its += solver.info().iterations;
             }
             outputs[0] = bestP[0] * indata.abs().maxCoeff();
             outputs[1] = bestP[1];
