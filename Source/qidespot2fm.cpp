@@ -33,7 +33,7 @@ using namespace Eigen;
 class FMAlgo : public Algorithm<double> {
 protected:
 	shared_ptr<QI::SSFPSimple> m_sequence;
-    bool m_symmetric;
+    bool m_symmetric = true;
 
 public:
     typedef typename Algorithm<double>::TArray TArray;
@@ -109,16 +109,17 @@ public:
             Array3d upper; upper << 1.e3,  T1,                      0.6 / this->m_sequence->TR();
             if (this->m_symmetric)
                 lower[2] = 0.;
-            //cout << "Lower: " << lower.transpose() << endl;
-            //cout << "Upper: " << upper.transpose() << endl;
             cost.setLowerBound(lower);
             cost.setUpperBound(upper);
             
             vector<double> f0_starts;
-            for (double f = 1.; f < 0.5 / this->m_sequence->TR(); f += 0.25 / this->m_sequence->TR()) {
-                f0_starts.push_back(f);
-                if (!this->m_symmetric)
-                    f0_starts.push_back(-f);
+            if (this->m_symmetric) {
+                f0_starts.push_back(5.);
+                f0_starts.push_back(0.25 / this->m_sequence->TR());
+            } else {
+                f0_starts.push_back(0.);
+                f0_starts.push_back(0.25 / this->m_sequence->TR());
+                f0_starts.push_back(-0.25/ this->m_sequence->TR());
             }
             double best = numeric_limits<double>::infinity();
             Eigen::Array3d bestP;
@@ -202,7 +203,7 @@ int main(int argc, char **argv) {
         switch (c) {
         case 'v': verbose = true; break;
         case 'n': prompt = false; break;
-        case 'A': symmetric = false; break;
+        case 'A': symmetric = false; if (verbose) cout << "Asymmetric f0 fitting selected." << endl; break;
         case 'm':
             if (verbose) cout << "Reading mask file " << optarg << endl;
             mask = QI::ReadImage(optarg);
