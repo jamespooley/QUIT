@@ -5,7 +5,7 @@
 # separately to other single-component programs.
 
 source ./test_common.sh
-SILENCE_TESTS="0"
+SILENCE_TESTS="1"
 
 DATADIR="fm"
 mkdir -p $DATADIR
@@ -33,7 +33,7 @@ SSFP_FLIP="$2"
 SSFP_PC="$3"
 ARGS="$4"
 
-run_test "CREATE_SIGNALS" $QUITDIR/qisignal --1 -n -v --noise 0.002 << END_SIG
+run_test "CREATE_SIGNALS" $QUITDIR/qisignal --1 -n -v --noise 0.004 << END_SIG
 PD.nii
 T1.nii
 T2.nii
@@ -51,12 +51,13 @@ echo "$SSFP_FLIP
 $SSFP_PC
 $SSFP_TR" > ${PREFIX}fm_in.txt
 
-run_test "${PREFIX}BFGS"     $QUITDIR/qidespot2fm -n -v -bB1.nii T1.nii ${PREFIX}${SSFP_FILE}  -o${PREFIX}  < ${PREFIX}fm_in.txt
+run_test "${PREFIX}BFGS"     $QUITDIR/qidespot2fm -n -v -bB1.nii T1.nii ${PREFIX}${SSFP_FILE}  -o${PREFIX} $ARGS < ${PREFIX}fm_in.txt
 compare_test "BFGS"   T2.nii ${PREFIX}FM_T2.nii  0.01
 
 }
 
 run_tests "2_180_0" "5 25 45 65" "180 0"
+run_tests "2_90_270" "5 25 45 65" "90 270" "-A"
 
 cd ..
 SILENCE_TESTS="0"
