@@ -228,19 +228,23 @@ class FMCostFunction : public cppoptlib::Problem<double> {
 public:
     Eigen::ArrayXd m_data;
     double m_T1, m_B1;
-    shared_ptr<QI::SequenceBase> m_sequence;
+    shared_ptr<QI::SSFPSimple> m_sequence;
     const shared_ptr<QI::SCD> m_model = make_shared<QI::SCD>();
 
     Eigen::ArrayXd residuals(const Eigen::VectorXd &p) {
-        Eigen::ArrayXd fullparams(5);
-        fullparams << p(0), m_T1, p(1), p(2), m_B1;
-        ArrayXcd s = m_sequence->signal(m_model, fullparams);
-        Eigen::ArrayXd diff = DifferenceVector(s, m_data);
+        ArrayXd s = QI::One_SSFP_Echo_Magnitude(m_sequence->flip(), m_sequence->phase_incs(), m_sequence->TR(), p[0], m_T1, p[1], p[2], m_B1);
+        Eigen::ArrayXd diff = s - m_data;
         return diff;
     }
 
     double value(const cppoptlib::Vector<double> &p) {
         return residuals(p).square().sum();;
+    }
+    
+    void gradient(const  cppoptlib::Vector<double> &p,  cppoptlib::Vector<double> &grad) {
+        ArrayXd  s   = QI::One_SSFP_Echo_Magnitude(m_sequence->flip(), m_sequence->phase_incs(), m_sequence->TR(), p[0], m_T1, p[1], p[2], m_B1);
+        ArrayXXd drv = QI::One_SSFP_Echo_Derivs(m_sequence->flip(), m_sequence->phase_incs(), m_sequence->TR(), p[0], m_T1, p[1], p[2], m_B1);
+        grad = 2*(drv.colwise()*(s - m_data)).colwise().sum();
     }
 };
 
@@ -291,9 +295,7 @@ public:
             its = 0;
             for (const double &f0 : f0_starts) {
                 Eigen::VectorXd p(3); p << 10., 0.1 * T1, f0; // Yarnykh gives T2 = 0.045 * T1 in brain, but best to overestimate for CSF
-                //cout << "Start: " << p.transpose() << endl;
                 solver.minimize(cost, p);
-                //cout << "End: " << p.transpose() << endl;
                 double r = cost(p);
                 if (r < best) {
                     best = r;
