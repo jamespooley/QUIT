@@ -65,7 +65,7 @@ $SSFP_TR
 $SSFP_Trf" > ${PREFIX}fm_f_in.txt
 
 #run_test "${PREFIX}LM"       $QUITDIR/qidespot2fm -n -v -bB1.nii T1.nii ${PREFIX}${SSFP_FILE}  -o${PREFIX}   -al  -T1       < ${PREFIX}fm_in.txt
-run_test "${PREFIX}BFGS"     $QUITDIR/qidespot2fm -n -v -bB1.nii T1.nii ${PREFIX}${SSFP_FILE}  -o${PREFIX}b  -ab      < ${PREFIX}fm_in.txt
+run_test "${PREFIX}BFGS"     $QUITDIR/qidespot2fm -n -v -bB1.nii T1.nii ${PREFIX}${SSFP_FILE}  -o${PREFIX}b  -ab    < ${PREFIX}fm_in.txt
 
 #compare_test "LM"     T2.nii ${PREFIX}FM_T2.nii  0.01
 compare_test "BFGS"   T2.nii ${PREFIX}bFM_T2.nii  0.01
