@@ -95,7 +95,7 @@ public:
             
             cppoptlib::LbfgsbSolver<double>::Info opts;
             opts.rate = 1.e-5;
-            opts.iterations = 50;
+            opts.iterations = 100;
             opts.gradNorm = 1.e-3;
             opts.m = 5;
             
@@ -105,8 +105,8 @@ public:
             cost.m_data = data;
             cost.m_sequence = this->m_sequence;
             cost.m_T1 = T1;
-            Array3d lower; lower << 0.001, this->m_sequence->TR(), -0.6 / this->m_sequence->TR();
-            Array3d upper; upper << 1.e3,  T1,                      0.6 / this->m_sequence->TR();
+            Array3d lower; lower << 1.e-3, this->m_sequence->TR(), -0.75 / this->m_sequence->TR();
+            Array3d upper; upper << 1.e3,  T1,                      0.75 / this->m_sequence->TR();
             if (this->m_symmetric)
                 lower[2] = 0.;
             cost.setLowerBound(lower);
@@ -117,9 +117,11 @@ public:
                 f0_starts.push_back(5.);
                 f0_starts.push_back(0.25 / this->m_sequence->TR());
             } else {
-                f0_starts.push_back(0.);
-                f0_starts.push_back(0.25 / this->m_sequence->TR());
-                f0_starts.push_back(-0.25/ this->m_sequence->TR());
+				f0_starts.push_back(0.);
+                f0_starts.push_back( 0.25 / this->m_sequence->TR());
+                f0_starts.push_back(-0.25 / this->m_sequence->TR());
+                f0_starts.push_back( 0.5 / this->m_sequence->TR());
+				f0_starts.push_back(-0.5 / this->m_sequence->TR());
             }
             double best = numeric_limits<double>::infinity();
             Eigen::Array3d bestP;
@@ -131,8 +133,8 @@ public:
                 if (r < best) {
                     best = r;
                     bestP = p;
+					its = solver.info().iterations;
                 }
-                its += solver.info().iterations;
             }
             outputs[0] = bestP[0] * indata.abs().maxCoeff();
             outputs[1] = bestP[1];
@@ -282,7 +284,7 @@ int main(int argc, char **argv) {
     QI::WriteImage(apply->GetOutput(0), outPrefix + "PD.nii");
     QI::WriteImage(apply->GetOutput(1), outPrefix + "T2.nii");
     QI::WriteImage(apply->GetOutput(2), outPrefix + "f0.nii");
+	QI::WriteImage(apply->GetIterationsOutput(), outPrefix + "its.nii");
     QI::WriteResiduals(apply->GetResidOutput(), outPrefix, all_residuals, apply->GetOutput(0));
-
     return EXIT_SUCCESS;
 }
